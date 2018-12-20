@@ -73,7 +73,7 @@ There are several ways how you can create a `Query Builder`:
     
     const user = await getConnection()
         .createQueryBuilder()
-        .select()
+        .select("user")
         .from(User, "user")
         .where("user.id = :id", { id: 1 })
         .getOne();
@@ -110,7 +110,7 @@ There are 5 different `QueryBuilder` types available:
     
     const user = await getConnection()
         .createQueryBuilder()
-        .select()
+        .select("user")
         .from(User, "user")
         .where("user.id = :id", { id: 1 })
         .getOne();
@@ -220,7 +220,7 @@ We use aliases everywhere, except when we work with selected data.
 
 ```typescript
 createQueryBuilder()
-    .select()
+    .select("user")
     .from(User, "user")
 ```
 
@@ -235,7 +235,7 @@ Later we use this alias to access the table:
 
 ```typescript
 createQueryBuilder()
-    .select()
+    .select("user")
     .from(User, "user")
     .where("user.name = :name", { name: "Timber" })
 ```
@@ -315,6 +315,23 @@ Which will produce the following SQL query:
 
 ```sql
 SELECT ... FROM users user WHERE user.firstName = 'Timber' OR user.lastName = 'Saw'
+```
+
+You can add a complex `WHERE` expression into an existing `WHERE` using `Brackets`
+
+```typescript
+createQueryBuilder("user")
+    .where("user.registered = :registered", { registered: true })
+    .andWhere(new Brackets(qb => {
+        qb.where("user.firstName = :firstName", { firstName: "Timber" })
+          .orWhere("user.lastName = :lastName", { lastName: "Saw" })
+    }))
+```
+
+Which will produce the following SQL query:
+
+```sql
+SELECT ... FROM users user WHERE user.registered = true AND (user.firstName = 'Timber' OR user.lastName = 'Saw')
 ```
 
 You can combine as many `AND` and `OR` expressions as you need.
@@ -437,7 +454,7 @@ createQueryBuilder("user")
     .addGroupBy("user.id");
 ```
 
-If you use `.groupBy` more than once you'll override all previous `ORDER BY` expressions.
+If you use `.groupBy` more than once you'll override all previous `GROUP BY` expressions.
 
 ## Adding `LIMIT` expression
 

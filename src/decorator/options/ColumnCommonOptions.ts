@@ -40,8 +40,14 @@ export interface ColumnCommonOptions {
 
     /**
      * Default database value.
+     * Note that default value is not supported when column type is 'json' of mysql.
      */
     default?: any;
+
+    /**
+     * ON UPDATE trigger. Works only for MySQL.
+     */
+    onUpdate?: string;
 
     /**
      * Column comment. Not supported by all database types.
@@ -53,7 +59,7 @@ export interface ColumnCommonOptions {
      * Can be simply set to true or array length can be specified.
      * Supported only by postgres.
      */
-    isArray?: boolean;
+    array?: boolean;
 
     /**
      * Specifies a value transformer that is to be used to (un)marshal

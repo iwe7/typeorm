@@ -11,8 +11,6 @@ describe("transaction > method wrapped into transaction decorator", () => {
     let connections: Connection[];
     before(async () => connections = await createTestingConnections({
         entities: [__dirname + "/entity/*{.js,.ts}"],
-        schemaCreate: true,
-        dropSchema: true,
         enabledDrivers: ["mysql"] // since @Transaction accepts a specific connection name we can use only one connection and its name
     }));
     beforeEach(() => reloadTestingDatabases(connections));
@@ -140,6 +138,28 @@ describe("transaction > method wrapped into transaction decorator", () => {
         const loadedCategory = await connection.manager.findOne(Category, { where: { name: "successfully saved category" } });
         expect(loadedCategory).not.to.be.empty;
         loadedCategory!.should.be.eql(category);
+    })));
+
+    it("should execute all operations in the method in a transaction with a specified isolation", () => Promise.all(connections.map(async connection => {
+
+        const post = new Post();
+        post.title = "successfully saved post";
+
+        const category = new Category();
+        category.name = "successfully saved category";
+
+        // call controller method
+        await controller.saveWithNonDefaultIsolation.apply(controller, [post, category]);
+
+        // controller should have saved both post and category successfully
+        const loadedPost = await connection.manager.findOne(Post, { where: { title: "successfully saved post" } });
+        expect(loadedPost).not.to.be.empty;
+        loadedPost!.should.be.eql(post);
+
+        const loadedCategory = await connection.manager.findOne(Category, { where: { name: "successfully saved category" } });
+        expect(loadedCategory).not.to.be.empty;
+        loadedCategory!.should.be.eql(category);
+
     })));
 
 });

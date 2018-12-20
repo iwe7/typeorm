@@ -2,19 +2,21 @@ import {createConnection} from "../index";
 import {Connection} from "../connection/Connection";
 import {ConnectionOptionsReader} from "../connection/ConnectionOptionsReader";
 import {highlight} from "cli-highlight";
+import * as yargs from "yargs";
+
 const chalk = require("chalk");
 
 /**
  * Shows sql to be executed by schema:sync command.
  */
-export class SchemaLogCommand {
+export class SchemaLogCommand implements yargs.CommandModule {
 
     command = "schema:log";
     describe = "Shows sql to be executed by schema:sync command. It shows sql log only for your default connection. " +
         "To run update queries on a concrete connection use -c option.";
 
-    builder(yargs: any) {
-        return yargs
+    builder(args: yargs.Argv) {
+        return args
             .option("c", {
                 alias: "connection",
                 default: "default",
@@ -27,13 +29,13 @@ export class SchemaLogCommand {
             });
     }
 
-    async handler(argv: any) {
+    async handler(args: yargs.Arguments) {
 
         let connection: Connection|undefined = undefined;
         try {
 
-            const connectionOptionsReader = new ConnectionOptionsReader({ root: process.cwd(), configName: argv.config });
-            const connectionOptions = await connectionOptionsReader.get(argv.connection);
+            const connectionOptionsReader = new ConnectionOptionsReader({ root: process.cwd(), configName: args.config });
+            const connectionOptions = await connectionOptionsReader.get(args.connection);
             Object.assign(connectionOptions, {
                 synchronize: false,
                 migrationsRun: false,
@@ -41,18 +43,18 @@ export class SchemaLogCommand {
                 logging: false
             });
             connection = await createConnection(connectionOptions);
-            const sqls = await connection.driver.createSchemaBuilder().log();
-            if (sqls.length === 0) {
+            const sqlInMemory = await connection.driver.createSchemaBuilder().log();
+            if (sqlInMemory.upQueries.length === 0) {
                 console.log(chalk.yellow("Your schema is up to date - there are no queries to be executed by schema syncronization."));
 
             } else {
-                const lengthSeparators = String(sqls.length).split("").map(char => "-").join("");
+                const lengthSeparators = String(sqlInMemory.upQueries.length).split("").map(char => "-").join("");
                 console.log(chalk.yellow("---------------------------------------------------------------" + lengthSeparators));
-                console.log(chalk.yellow.bold(`-- Schema syncronization will execute following sql queries (${chalk.white(sqls.length)}):`));
+                console.log(chalk.yellow.bold(`-- Schema syncronization will execute following sql queries (${chalk.white(sqlInMemory.upQueries.length)}):`));
                 console.log(chalk.yellow("---------------------------------------------------------------" + lengthSeparators));
 
-                sqls.forEach(sql => {
-                    let sqlString = typeof sql === "string" ? sql : sql.up;
+                sqlInMemory.upQueries.forEach(query => {
+                    let sqlString = query;
                     sqlString = sqlString.trim();
                     sqlString = sqlString.substr(-1) === ";" ? sqlString : sqlString + ";";
                     console.log(highlight(sqlString));

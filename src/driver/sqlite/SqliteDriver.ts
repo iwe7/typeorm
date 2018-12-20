@@ -70,7 +70,7 @@ export class SqliteDriver extends AbstractSqliteDriver {
         return this.queryRunner;
     }
 
-    normalizeType(column: { type?: ColumnType, length?: number | string, precision?: number, scale?: number }): string {
+    normalizeType(column: { type?: ColumnType, length?: number | string, precision?: number|null, scale?: number }): string {
         if ((column.type as any) === Buffer) {
             return "blob";
         }
@@ -97,6 +97,14 @@ export class SqliteDriver extends AbstractSqliteDriver {
                     if (err) return fail(err);
                     ok(databaseConnection);
                 });
+
+                // in the options, if encryption key for for SQLCipher is setted.
+                if (this.options.key) {
+                  databaseConnection.run(`PRAGMA key = ${this.options.key};`, (err: any, result: any) => {
+                    if (err) return fail(err);
+                    ok(databaseConnection);
+                  });
+                }
             });
         });
     }

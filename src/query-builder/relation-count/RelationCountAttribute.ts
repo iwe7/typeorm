@@ -3,6 +3,7 @@ import {QueryBuilderUtils} from "../QueryBuilderUtils";
 import {RelationMetadata} from "../../metadata/RelationMetadata";
 import {QueryExpressionMap} from "../QueryExpressionMap";
 import {SelectQueryBuilder} from "../SelectQueryBuilder";
+import {ObjectUtils} from "../../util/ObjectUtils";
 
 export class RelationCountAttribute {
 
@@ -32,7 +33,7 @@ export class RelationCountAttribute {
 
     constructor(private expressionMap: QueryExpressionMap,
                 relationCountAttribute?: Partial<RelationCountAttribute>) {
-        Object.assign(this, relationCountAttribute || {});
+        ObjectUtils.assign(this, relationCountAttribute || {});
     }
 
     // -------------------------------------------------------------------------
@@ -72,7 +73,7 @@ export class RelationCountAttribute {
 
     get junctionAlias(): string {
         const [parentAlias, relationProperty] = this.relationName.split(".");
-        return parentAlias + "_" + relationProperty + "_relation_count";
+        return parentAlias + "_" + relationProperty + "_rc";
     }
 
     /**

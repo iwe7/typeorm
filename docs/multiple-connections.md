@@ -76,7 +76,7 @@ Downside for might be that you'll need to manage and work with multiple connecti
 ## Using multiple databases in a single connection
 
 If you don't want to create multiple connections, 
-but want to use multiple databases in a single database,
+but want to use multiple databases in a single connection,
 you can specify database name per-entity you use:
 
 ```typescript
@@ -130,7 +130,7 @@ const users = await connection
 This code will produce following sql query (depend on database type):
 
 ```sql
-SELECT * FROM "secondDB"."question" "question", "thirdDB"."photo" "photo" 
+SELECT * FROM "secondDB"."user" "user", "thirdDB"."photo" "photo" 
     WHERE "photo"."userId" = "user"."id"
 ```
 

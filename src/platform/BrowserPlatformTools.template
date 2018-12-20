@@ -16,7 +16,12 @@ export class PlatformTools {
      * Gets global variable where global stuff can be stored.
      */
     static getGlobalVariable(): any {
-        return window;
+        if (typeof window !== "undefined") {
+            return window
+        } else {
+            // NativeScript uses global, not window
+            return global
+        }
     }
 
     /**
@@ -136,7 +141,7 @@ export class PlatformTools {
 
 /**
  * These classes are needed for stream operations or
- * in the mongodb driver. both aren't supported in the browser
+ * in the mongodb driver. Both aren't supported in the browser.
  */
 export class EventEmitter {}
 
@@ -145,3 +150,19 @@ export class Readable {}
 export class Writable {}
 
 export interface ReadStream {}
+
+/**
+ * This loads a polyfill to enable Buffers in the browser.
+ */
+interface Window {
+    Buffer: any;
+}
+
+declare var window: Window;
+if (typeof window !== "undefined") {
+    window.Buffer = require("buffer/").Buffer;
+}
+// NativeScript uses global, not window
+if (typeof global !== "undefined") {
+    global.Buffer = require("buffer/").Buffer;
+}

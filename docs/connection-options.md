@@ -5,23 +5,26 @@
 * [`mysql` / `mariadb` connection options](#mysql--mariadb-connection-options)
 * [`postgres` connection options](#postgres-connection-options)
 * [`sqlite` connection options](#sqlite-connection-options)
-* [`websql` connection options](#websql-connection-options)
 * [`cordova` connection options](#cordova-connection-options)
+* [`react-native` connection options](#react-native-connection-options)
+* [`nativescript` connection options](#nativescript-connection-options)
 * [`mssql` connection options](#mssql-connection-options)
 * [`mongodb` connection options](#mongodb-connection-options)
 * [`sql.js` connection options](#sqljs-connection-options)
+* [`expo` connection options](#expo-connection-options)
 * [Connection options example](#connection-options-example)
     
 ## What is `ConnectionOptions`
 
-Connection options is a connection configuration object you pass to `createConnection`
- or create in `ormconfig` file. Different drivers have their own specific connection options.
+Connection options is a connection configuration you pass to `createConnection`
+ or define in `ormconfig` file. Different databases have their own specific connection options.
 
 ## Common connection options
 
 * `type` - Database type. You must specify what database engine you use.
- Possible values are "mysql", "postgres", "mariadb", "sqlite", "cordova", "oracle", "mssql", "websql", "mongodb", "sqljs". 
- This option is required.
+ Possible values are "mysql", "postgres", "mariadb", "sqlite", "cordova", "nativescript",
+ "oracle", "mssql", "mongodb", "sqljs", "react-native".
+ This option is **required**.
 
 * `name` - Connection name. You'll use it to get connection you need using `getConnection(name: string)` 
 or `ConnectionManager.get(name: string)`. 
@@ -84,7 +87,13 @@ This option is useful during debug and development.
  Instead, it syncs just by creating indices.
 
 * `migrationsRun` - Indicates if migrations should be auto run on every application launch.
-As an alternative, you can use CLI and run migrations:run command.
+As an alternative, you can use CLI and run migration:run command.
+
+* `migrationsTableName` - Name of the table in the database which is going to contain information about executed migrations.
+By default this table is called "migrations".
+
+* `cache` - Enables entity result caching. You can also configure cache type and other cache options here.
+Read more about caching [here](./caching.md).
 
 * `cli.entitiesDir` - Directory where entities should be created by default by CLI.
 
@@ -94,7 +103,7 @@ As an alternative, you can use CLI and run migrations:run command.
 
 ## `mysql` / `mariadb` connection options
 
-* `url` - Connection url where perform connection to.
+* `url` - Connection url where perform connection to. Please note that other connection options will override parameters set from url.
 
 * `host` - Database host.
 
@@ -115,15 +124,17 @@ values to JavaScript Date object and vice versa. This can be `local`, `Z`, or an
 
 * `connectTimeout` - The milliseconds before a timeout occurs during the initial connection to the MySQL server.
  (Default: `10000`)
+
+* `acquireTimeout` - The milliseconds before a timeout occurs during the initial connection to the MySql server. It differs from `connectTimeout` as it governs the TCP connection timeout where as connectTimeout does not. (default: `10000`)
  
 * `insecureAuth` - Allow connecting to MySQL instances that ask for the old (insecure) authentication method. 
 (Default: `false`)
  
 * `supportBigNumbers` - When dealing with big numbers (`BIGINT` and `DECIMAL` columns) in the database, 
-you should enable this option (Default: `false`)
+you should enable this option (Default: `true`)
  
 * `bigNumberStrings` - Enabling both `supportBigNumbers` and `bigNumberStrings` forces big numbers 
-(`BIGINT` and `DECIMAL` columns) to be always returned as JavaScript String objects (Default: `false`). 
+(`BIGINT` and `DECIMAL` columns) to be always returned as JavaScript String objects (Default: `true`). 
 Enabling `supportBigNumbers` but leaving `bigNumberStrings` disabled will return big numbers as String 
 objects only when they cannot be accurately represented with 
 [JavaScript Number objects](http://ecma262-5.com/ELS5_HTML.htm#Section_8.5) 
@@ -151,7 +162,7 @@ See [SSL options](https://github.com/mysqljs/mysql#ssl-options).
 
 ## `postgres` connection options
 
-* `url` - Connection url where perform connection to.
+* `url` - Connection url where perform connection to. Please note that other connection options will override parameters set from url.
 
 * `host` - Database host.
 
@@ -171,25 +182,23 @@ See [SSL options](https://github.com/mysqljs/mysql#ssl-options).
 
 * `database` - Database path. For example "./mydb.sql"
 
-## `websql` connection options
-
-* `database` - Database name
-
-* `version` - Version string of the database
-
-* `description` - Database description
-
-* `size` - The size of the database
-
 ## `cordova` connection options
 
 * `database` - Database name
 
 * `location` - Where to save the database. See [cordova-sqlite-storage](https://github.com/litehelpers/Cordova-sqlite-storage#opening-a-database) for options.
 
+## `react-native` connection options
+* `database` - Database name
+
+* `location` - Where to save the database. See [react-native-sqlite-storage](https://github.com/andpor/react-native-sqlite-storage#opening-a-database) for options.
+
+## `nativescript` connection options
+* `database` - Database name
+
 ## `mssql` connection options
 
-* `url` - Connection url where perform connection to.
+* `url` - Connection url where perform connection to. Please note that other connection options will override parameters set from url.
 
 * `host` - Database host.
 
@@ -236,7 +245,7 @@ See [SSL options](https://github.com/mysqljs/mysql#ssl-options).
  
 * `pool.autostart` - boolean, should the pool start creating resources etc once the constructor is called, (default `true`).
 
-* `pool.victionRunIntervalMillis` - How often to run eviction checks. Default: `0` (does not run).
+* `pool.evictionRunIntervalMillis` - How often to run eviction checks. Default: `0` (does not run).
 
 * `pool.numTestsPerRun` - Number of resources to check each eviction run. Default: `3`.
 
@@ -337,7 +346,7 @@ See [SSL options](https://github.com/mysqljs/mysql#ssl-options).
 
 ## `mongodb` connection options
 
-* `url` - Connection url where perform connection to.
+* `url` - Connection url where perform connection to. Please note that other connection options will override parameters set from url.
 
 * `host` - Database host.
 
@@ -455,6 +464,10 @@ See [SSL options](https://github.com/mysqljs/mysql#ssl-options).
 * `autoSaveCallback`: A function that get's called when changes to the database are made and `autoSave` is enabled. The function gets a `UInt8Array` that represents the database.
 
 * `location`: The file location to load and save the database to.
+
+## `expo` connection options
+
+* `database` - Name of the database. For example "mydb".
 
 ## Connection options example
 

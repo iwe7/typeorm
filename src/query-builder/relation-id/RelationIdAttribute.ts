@@ -3,6 +3,7 @@ import {QueryBuilderUtils} from "../QueryBuilderUtils";
 import {EntityMetadata} from "../../metadata/EntityMetadata";
 import {QueryExpressionMap} from "../QueryExpressionMap";
 import {SelectQueryBuilder} from "../SelectQueryBuilder";
+import {ObjectUtils} from "../../util/ObjectUtils";
 
 /**
  * Stores all join relation id attributes which will be used to build a JOIN query.
@@ -44,7 +45,7 @@ export class RelationIdAttribute {
 
     constructor(private queryExpressionMap: QueryExpressionMap,
                         relationIdAttribute?: Partial<RelationIdAttribute>) {
-        Object.assign(this, relationIdAttribute || {});
+        ObjectUtils.assign(this, relationIdAttribute || {});
     }
 
     // -------------------------------------------------------------------------
@@ -103,7 +104,7 @@ export class RelationIdAttribute {
      */
     get junctionAlias(): string {
         const [parentAlias, relationProperty] = this.relationName.split(".");
-        return parentAlias + "_" + relationProperty + "_relation_id";
+        return parentAlias + "_" + relationProperty + "_rid";
     }
 
     /**

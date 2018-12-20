@@ -11,7 +11,7 @@ describe("columns > embedded columns", () => {
 
     let connections: Connection[];
     before(async () => connections = await createTestingConnections({
-        entities: [__dirname + "/entity/*{.js,.ts}"]
+        entities: [__dirname + "/entity/*{.js,.ts}"],
     }));
     beforeEach(() => reloadTestingDatabases(connections));
     after(() => closeTestingConnections(connections));
@@ -80,23 +80,55 @@ describe("columns > embedded columns", () => {
         const databaseColumns = columns.map(c => c.databaseName);
 
         expect(databaseColumns).to.have.members([
+            // Post
+            // Post.id
             "id",
+            // Post.title
             "title",
+            // Post.text
             "text",
 
+            // Post.counters()
+            // Post.counters().likes
             "countersLikes",
+            // Post.counters().comments
             "countersComments",
+            // Post.counters().favorites
             "countersFavorites",
+            // Post.counters().information('info').description
+            "countersInfoDescr",
+            // Post.counters().otherCounters('testData').description
+            "countersTestDataDescr",
+            // Post.counters().dataWithoutPrefix('').description
+            "countersDescr",
 
-            "countersInformationDescription",
-            "countersTestDataDescription",
-
+            // Post.otherCounters('testCounters')
+            // Post.otherCounters('testCounters').likes
             "testCountersLikes",
+            // Post.otherCounters('testCounters').comments
             "testCountersComments",
+            // Post.otherCounters('testCounters').favorites
             "testCountersFavorites",
+            // Post.otherCounters('testCounters').information('info').description
+            "testCountersInfoDescr",
+            // Post.otherCounters('testCounters').data('data').description
+            "testCountersTestDataDescr",
+            // Post.otherCounters('testCounters').dataWithoutPrefix('').description
+            "testCountersDescr",
 
-            "testCountersInformationDescription",
-            "testCountersTestDataDescription",
+            // Post.countersWithoutPrefix('')
+            // Post.countersWithoutPrefix('').likes
+            "likes",
+            // Post.countersWithoutPrefix('').comments
+            "comments",
+            // Post.countersWithoutPrefix('').favorites
+            "favorites",
+            // Post.countersWithoutPrefix('').information('info').description
+            "infoDescr",
+            // Post.countersWithoutPrefix('').data('data').description
+            "testDataDescr",
+            // Post.countersWithoutPrefix('').dataWithoutPrefix('').description
+            "descr"
         ]);
     })));
 });

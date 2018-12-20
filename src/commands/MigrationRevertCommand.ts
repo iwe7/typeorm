@@ -1,22 +1,29 @@
 import {createConnection} from "../index";
 import {ConnectionOptionsReader} from "../connection/ConnectionOptionsReader";
 import {Connection} from "../connection/Connection";
+import * as yargs from "yargs";
 const chalk = require("chalk");
 
 /**
  * Reverts last migration command.
  */
-export class MigrationRevertCommand {
+export class MigrationRevertCommand implements yargs.CommandModule {
 
-    command = "migrations:revert";
+    command = "migration:revert";
     describe = "Reverts last executed migration.";
+    aliases = "migrations:revert";
 
-    builder(yargs: any) {
-        return yargs
+    builder(args: yargs.Argv) {
+        return args
             .option("c", {
                 alias: "connection",
                 default: "default",
                 describe: "Name of the connection on which run a query."
+            })
+            .option("transaction", {
+                alias: "t",
+                default: "default",
+                describe: "Indicates if transaction should be used or not for migration revert. Enabled by default."
             })
             .option("f", {
                 alias: "config",
@@ -25,21 +32,27 @@ export class MigrationRevertCommand {
             });
     }
 
-    async handler(argv: any) {
+    async handler(args: yargs.Arguments) {
+        if (args._[0] === "migrations:revert") {
+            console.log("'migrations:revert' is deprecated, please use 'migration:revert' instead");
+        }
 
         let connection: Connection|undefined = undefined;
         try {
-            const connectionOptionsReader = new ConnectionOptionsReader({ root: process.cwd(), configName: argv.config });
-            const connectionOptions = await connectionOptionsReader.get(argv.connection);
+            const connectionOptionsReader = new ConnectionOptionsReader({ root: process.cwd(), configName: args.config });
+            const connectionOptions = await connectionOptionsReader.get(args.connection);
             Object.assign(connectionOptions, {
                 subscribers: [],
                 synchronize: false,
                 migrationsRun: false,
                 dropSchema: false,
-                logging: ["schema"]
+                logging: ["query", "error", "schema"]
             });
             connection = await createConnection(connectionOptions);
-            await connection.undoLastMigration();
+            const options = {
+                transaction: args["t"] === "false" ? false : true
+            };
+            await connection.undoLastMigration(options);
             await connection.close();
 
         } catch (err) {

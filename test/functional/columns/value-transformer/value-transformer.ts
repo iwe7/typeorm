@@ -1,15 +1,17 @@
 import "reflect-metadata";
-import {expect} from "chai";
+
 import {closeTestingConnections, createTestingConnections, reloadTestingDatabases} from "../../../utils/test-utils";
+
 import {Connection} from "../../../../src/connection/Connection";
+import { PhoneBook } from "./entity/PhoneBook";
 import {Post} from "./entity/Post";
+import {expect} from "chai";
 
 describe("columns > value-transformer functionality", () => {
 
     let connections: Connection[];
     before(async () => connections = await createTestingConnections({
-        entities: [Post],
-        dropSchema: true
+        entities: [Post, PhoneBook],
     }));
     beforeEach(() => reloadTestingDatabases(connections));
     after(() => closeTestingConnections(connections));
@@ -30,9 +32,25 @@ describe("columns > value-transformer functionality", () => {
         await postRepository.save(post);
 
         // check if all columns are updated except for readonly columns
-        const loadedPost = await postRepository.findOneById(1);
+        const loadedPost = await postRepository.findOne(1);
         expect(loadedPost!.title).to.be.equal("About columns1");
         expect(loadedPost!.tags).to.deep.eq(["very", "simple"]);
+
+
+        const phoneBookRepository = connection.getRepository(PhoneBook);
+        const phoneBook = new PhoneBook();
+        phoneBook.name = "George";
+        phoneBook.phones = new Map();
+        phoneBook.phones.set("work", 123456);
+        phoneBook.phones.set("mobile", 1234567);
+        await phoneBookRepository.save(phoneBook);
+
+        const loadedPhoneBook = await phoneBookRepository.findOne(1);
+        expect(loadedPhoneBook!.name).to.be.equal("George");
+        expect(loadedPhoneBook!.phones).not.to.be.undefined;
+        expect(loadedPhoneBook!.phones.get("work")).to.equal(123456);
+        expect(loadedPhoneBook!.phones.get("mobile")).to.equal(1234567);
+
 
     })));
 

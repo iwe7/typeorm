@@ -18,7 +18,7 @@ export class ConnectionOptionsEnvReader {
      */
     read(): ConnectionOptions {
         return {
-            type: PlatformTools.getEnvVariable("TYPEORM_CONNECTION"),
+            type: PlatformTools.getEnvVariable("TYPEORM_CONNECTION") || (PlatformTools.getEnvVariable("TYPEORM_URL") ? PlatformTools.getEnvVariable("TYPEORM_URL").split("://")[0] : undefined),
             url: PlatformTools.getEnvVariable("TYPEORM_URL"),
             host: PlatformTools.getEnvVariable("TYPEORM_HOST"),
             port: PlatformTools.getEnvVariable("TYPEORM_PORT"),
@@ -34,11 +34,11 @@ export class ConnectionOptionsEnvReader {
             entities: this.stringToArray(PlatformTools.getEnvVariable("TYPEORM_ENTITIES")),
             migrations: this.stringToArray(PlatformTools.getEnvVariable("TYPEORM_MIGRATIONS")),
             subscribers: this.stringToArray(PlatformTools.getEnvVariable("TYPEORM_SUBSCRIBERS")),
-            entitySchemas: this.stringToArray(PlatformTools.getEnvVariable("TYPEORM_ENTITY_SCHEMAS")),
             logging: this.transformLogging(PlatformTools.getEnvVariable("TYPEORM_LOGGING")),
             logger: PlatformTools.getEnvVariable("TYPEORM_LOGGER"),
             entityPrefix: PlatformTools.getEnvVariable("TYPEORM_ENTITY_PREFIX"),
             maxQueryExecutionTime: PlatformTools.getEnvVariable("TYPEORM_MAX_QUERY_EXECUTION_TIME"),
+            debug: PlatformTools.getEnvVariable("TYPEORM_DEBUG"),
             cli: {
                 entitiesDir: PlatformTools.getEnvVariable("TYPEORM_ENTITIES_DIR"),
                 migrationsDir: PlatformTools.getEnvVariable("TYPEORM_MIGRATIONS_DIR"),

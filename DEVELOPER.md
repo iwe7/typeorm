@@ -9,7 +9,7 @@ This document describes how to set up your development environment and run TypeO
 * [Running Tests Locally](#running-tests-locally)
 
 See the [contribution guidelines](https://github.com/typeorm/typeorm/blob/master/CONTRIBUTING.md)
-if you'd like to contribute to Angular.
+if you'd like to contribute to TypeORM.
 
 ## Prerequisite Software
 
@@ -66,7 +66,7 @@ For example to proper install oracle driver you need to follow all instructions 
 To create an initial `ormconfig.json` file, run the following command:
 
 ```shell
-npm run setup:config
+cp ormconfig.json.dist ormconfig.json
 ```
 
 ## Building
@@ -148,3 +148,6 @@ All the tests are executed on our Continuous Integration infrastructure and a PR
 To run your tests you need dbms installed on your machine. Alternatively, you can use docker
 with all dbms images inside it. To use dbms for your tests from docker simply run `docker-compose up`
 in the root of the project. Once all images are fetched and run you can run tests.
+
+- The docker image of mssql-server needs at least 3.25GB of RAM.
+- Make sure to assign enough memory to the Docker VM if you're running on Docker for Mac or Windows

@@ -110,20 +110,6 @@ await repository.save([
 ]);
 ```
 
-* `update` - Partially updates entity by a given update options.
-
-```typescript
-await repository.update({ firstName: "Timber" }, { firstName: "Rizzrak" });
-// executes UPDATE user SET firstName = Rizzrak WHERE firstName = Timber
-```
-
-* `updateById` - Partially updates entity by a given update options.
-
-```typescript
-await repository.updateById(1, { firstName: "Rizzrak" });
-// executes UPDATE user SET firstName = Rizzrak WHERE id = 1
-```
-
 * `remove` - Removes a given entity or array of entities.
 It removes all given entities in a single transaction (in the case of entity, manager is not transactional).
 
@@ -136,23 +122,57 @@ await repository.remove([
 ]);
 ```
 
-* `removeById` - Removes entity by entity id.
+* `insert` - Inserts a new entity, or array of entities.
 
 ```typescript
-await repository.removeById(1);
+await repository.insert({
+    firstName: "Timber",
+    lastName: "Timber"
+});
+
+
+await manager.insert(User, [{ 
+    firstName: "Foo", 
+    lastName: "Bar" 
+}, { 
+    firstName: "Rizz", 
+    lastName: "Rak" 
+}]);
 ```
 
-
-* `removeByIds` - Removes entity by entity ids.
+* `update` - Partially updates entity by a given update options or entity id.
 
 ```typescript
-await repository.removeByIds([1, 2, 3]);
+await repository.update({ firstName: "Timber" }, { firstName: "Rizzrak" });
+// executes UPDATE user SET firstName = Rizzrak WHERE firstName = Timber
+
+await repository.update(1, { firstName: "Rizzrak" });
+// executes UPDATE user SET firstName = Rizzrak WHERE id = 1
+```
+
+* `delete` - Deletes entities by entity id, ids or given conditions:
+
+```typescript
+await repository.delete(1);
+await repository.delete([1, 2, 3]);
+await repository.delete({ firstName: "Timber" });
 ```
 
 * `count` - Counts entities that match given options. Useful for pagination.
 
 ```typescript
 const count = await repository.count({ firstName: "Timber" });
+```
+
+* `increment` - Increments some column by provided value of entities that match given options.
+
+```typescript
+await manager.increment(User, { firstName: "Timber" }, "age", 3);
+```
+
+* `decrement` - Decrements some column by provided value that match given options.
+```typescript
+await manager.decrement(User, { firstName: "Timber" }, "age", 3);
 ```
 
 * `find` - Finds entities that match given options.
@@ -169,22 +189,25 @@ but ignores pagination settings (`from` and `take` options).
 const [timbers, timbersCount] = await repository.findAndCount({ firstName: "Timber" });
 ```
 
-* `findByIds` - Finds entities by given ids.
+* `findByIds` - Finds multiple entities by id.
 
 ```typescript
 const users = await repository.findByIds([1, 2, 3]);
 ```
 
-* `findOne` - Finds first entity that matches given find options.
+* `findOne` - Finds first entity that matches some id or find options.
 
 ```typescript
+const user = await repository.findOne(1);
 const timber = await repository.findOne({ firstName: "Timber" });
 ```
 
-* `findOneById` - Finds entity with given id.
+* `findOneOrFail` - Finds the first entity that matches the some id or find options.
+Rejects the returned promise if nothing matches.
 
 ```typescript
-const user = await repository.findOneById(1);
+const user = await repository.findOneOrFail(1);
+const timber = await repository.findOneOrFail({ firstName: "Timber" });
 ```
 
 * `query` - Executes a raw SQL query.
@@ -198,81 +221,38 @@ const rawData = await repository.query(`SELECT * FROM USERS`);
 ```typescript
 await repository.clear();
 ```
+### Additional Options
+
+Optional `SaveOptions` can be passed as parameter for `save`, `insert` and `update`.
+
+* `data` -  Additional data to be passed with persist method. This data can be used in subscribers then.
+* `listeners`: boolean - Indicates if listeners and subscribers are called for this operation. By default they are enabled, you can disable them by setting `{ listeners: false }` in save/remove options.
+* `transaction`: boolean - By default transactions are enabled and all queries in persistence operation are wrapped into the transaction. You can disable this behaviour by setting `{ transaction: false }` in the persistence options.
+* `chunk`: number - Breaks save execution into given number of chunks. For example, if you want to save 100.000 objects but you have issues with saving them, you can break them into 10 groups of 10.000 objects (by setting `{ chunk: 10 }`) and save each group separately. This option is needed to perform very big insertions when you have issues with underlying driver parameter number limitation.
+* `reload`: boolean - Flag to determine whether the entity that is being persisted should be reloaded during the persistence operation. It will work only on databases which does not support RETURNING / OUTPUT statement. Enabled by default.
+
+Example:
+```typescript
+// users contains array of User Entities
+userRepository.insert(users, {chunk: users.length / 1000});
+```
+
+Optional `RemoveOptions` can be passed as parameter for `remove` and `delete`.
+
+* `data` - Additional data to be passed with remove method. This data can be used in subscribers then.
+* `listener`: boolean - Indicates if listeners and subscribers are called for this operation. By default they are enabled, you can disable them by setting `{ listeners: false }` in save/remove options.
+* `transaction`: boolean - By default transactions are enabled and all queries in persistence operation are wrapped into the transaction. You can disable this behaviour by setting `{ transaction: false }` in the persistence options.
+* `chunk`: number - Breaks save execution into given number of chunks. For example, if you want to save 100.000 objects but you have issues with saving them, you can break them into 10 groups of 10.000 objects (by setting `{ chunk: 10 }`) and save each group separately. This option is needed to perform very big insertions when you have issues with underlying driver parameter number limitation.
+
+Example:
+```typescript
+// users contains array of User Entities
+userRepository.remove(users, {chunk: entities.length / 1000});
+```
 
 ## `TreeRepository` API
 
-* `findTrees` - Gets complete tree for all roots in the table.
-
-```typescript
-const treeCategories = await repository.findTrees();
-// returns root categories with sub categories inside
-```
-
-* `findRoots` - Roots are entities that have no ancestors. Finds them all.
-Does not load children leafs.
-
-```typescript
-const rootCategories = await repository.findRoots();
-// returns root categories without sub categories inside
-```
-
-* `findDescendants` - Gets all children (descendants) of the given entity. Returns them all in a flat array.
-
-```typescript
-const childrens = await repository.findDescendants(parentCategory);
-// returns all direct subcategories (without its nested categories) of a parentCategory
-```
-
-* `findDescendantsTree` - Gets all children (descendants) of the given entity. Returns them in a tree - nested into each other.
-
-```typescript
-const childrensTree = await repository.findDescendantsTree(parentCategory);
-// returns all direct subcategories (with its nested categories) of a parentCategory
-```
-
-* `createDescendantsQueryBuilder` - Creates a query builder used to get descendants of the entities in a tree.
-
-```typescript
-const childrens = await repository
-    .createDescendantsQueryBuilder("category", "categoryClosure", parentCategory)
-    .andWhere("category.type = 'secondary'")
-    .getMany();
-```
-
-* `countDescendants` - Gets number of descendants of the entity.
-
-```typescript
-const childrenCount = await repository.countDescendants(parentCategory);
-```
-
-* `findAncestors` - Gets all parent (ancestors) of the given entity. Returns them all in a flat array.
-
-```typescript
-const parents = await repository.findAncestors(childCategory);
-// returns all direct childCategory's parent categories (without "parent of parents")
-```
-
-* `findAncestorsTree` - Gets all parent (ancestors) of the given entity. Returns them in a tree - nested into each other.
-
-```typescript
-const parentsTree = await repository.findAncestorsTree(childCategory);
-// returns all direct childCategory's parent categories (with "parent of parents")
-```
-
-* `createAncestorsQueryBuilder` - Creates a query builder used to get ancestors of the entities in a tree.
-
-```typescript
-const parents = await repository
-    .createAncestorsQueryBuilder("category", "categoryClosure", childCategory)
-    .andWhere("category.type = 'secondary'")
-    .getMany();
-```
-
-* `countAncestors` - Gets the number of ancestors of the entity.
-
-```typescript
-const parentsCount = await repository.countAncestors(childCategory);
-```
+For `TreeRepository` API refer to [the Tree Entities documentation](./tree-entities.md#working-with-tree-entities).
 
 ## `MongoRepository` API
 

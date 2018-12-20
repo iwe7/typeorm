@@ -19,7 +19,7 @@ Learn more [Transactions](./transactions.md).
 ```typescript
 await manager.transaction(async manager => {
     // NOTE: you must perform all database operations using the given manager instance
-    // its a special instance of EntityManager working with this transaction
+    // it's a special instance of EntityManager working with this transaction
     // and don't forget to await things here
 });
 ```
@@ -108,20 +108,6 @@ await manager.save([
 ]);
 ```
 
-* `update` - Partially updates entity by a given update options.
-
-```typescript
-await manager.update(User, { firstName: "Timber" }, { firstName: "Rizzrak" });
-// executes UPDATE user SET firstName = Rizzrak WHERE firstName = Timber
-```
-
-* `updateById` - Partially updates entity by a given update options.
-
-```typescript
-await manager.updateById(User, 1, { firstName: "Rizzrak" });
-// executes UPDATE user SET firstName = Rizzrak WHERE id = 1
-```
-
 * `remove` - Removes a given entity or array of entities.
 It removes all given entities in a single transaction (in the case of entity, manager is not transactional).
 
@@ -134,23 +120,56 @@ await manager.remove([
 ]);
 ```
 
-* `removeById` - Removes entity by entity id.
+* `insert` - Inserts a new entity, or array of entities.
 
 ```typescript
-await manager.removeById(User, 1);
+await manager.insert(User, { 
+    firstName: "Timber", 
+    lastName: "Timber" 
+});
+
+await manager.insert(User, [{ 
+    firstName: "Foo", 
+    lastName: "Bar" 
+}, { 
+    firstName: "Rizz", 
+    lastName: "Rak" 
+}]);
 ```
 
-
-* `removeByIds` - Removes entity by entity ids.
+* `update` - Partially updates entity by a given update options or entity id.
 
 ```typescript
-await manager.removeByIds(User, [1, 2, 3]);
+await manager.update(User, { firstName: "Timber" }, { firstName: "Rizzrak" });
+// executes UPDATE user SET firstName = Rizzrak WHERE firstName = Timber
+
+await manager.update(User, 1, { firstName: "Rizzrak" });
+// executes UPDATE user SET firstName = Rizzrak WHERE id = 1
+```
+
+* `delete` - Deletes entities by entity id, ids or given conditions:
+
+```typescript
+await manager.delete(User, 1);
+await manager.delete(User, [1, 2, 3]);
+await manager.delete(User, { firstName: "Timber" });
 ```
 
 * `count` - Counts entities that match given options. Useful for pagination.
 
 ```typescript
 const count = await manager.count(User, { firstName: "Timber" });
+```
+
+* `increment` - Increments some column by provided value of entities that match given options.
+
+```typescript
+await manager.increment(User, { firstName: "Timber" }, "age", 3);
+```
+
+* `decrement` - Decrements some column by provided value that match given options.
+```typescript
+await manager.decrement(User, { firstName: "Timber" }, "age", 3);
 ```
 
 * `find` - Finds entities that match given options.
@@ -167,22 +186,25 @@ but ignores pagination settings (from and take options).
 const [timbers, timbersCount] = await manager.findAndCount(User, { firstName: "Timber" });
 ```
 
-* `findByIds` - Finds entities by given ids.
+* `findByIds` - Finds multiple entities by id.
 
 ```typescript
 const users = await manager.findByIds(User, [1, 2, 3]);
 ```
 
-* `findOne` - Finds first entity that matches given find options.
-
-```typescript
-const timber = await manager.findOne(User, { firstName: "Timber" });
-```
-
-* `findOneById` - Finds entity with given id.
+* `findOne` - Finds the first entity that matches some id or find options.
 
 ```typescript
 const user = await manager.findOne(User, 1);
+const timber = await manager.findOne(User, { firstName: "Timber" });
+```
+
+* `findOneOrFail` - Finds the first entity that matches some id or find options.
+Rejects the returned promise if nothing matches.
+
+```typescript
+const user = await manager.findOneOrFail(User, 1);
+const timber = await manager.findOneOrFail(User, { firstName: "Timber" });
 ```
 
 * `clear` - Clears all the data from the given table (truncates/drops it).

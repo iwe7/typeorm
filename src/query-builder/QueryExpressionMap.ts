@@ -10,6 +10,7 @@ import {SelectQuery} from "./SelectQuery";
 import {ColumnMetadata} from "../metadata/ColumnMetadata";
 import {RelationMetadata} from "../metadata/RelationMetadata";
 import {QueryBuilder} from "./QueryBuilder";
+import {SelectQueryBuilderOption} from "./SelectQueryBuilderOption";
 
 /**
  * Contains all properties of the QueryBuilder that needs to be build a final query.
@@ -59,12 +60,27 @@ export class QueryExpressionMap {
     /**
      * Optional returning (or output) clause for insert, update or delete queries.
      */
-    returning: string = "";
+    returning: string|string[];
+
+    /**
+     * Extra returning columns to be added to the returning statement if driver supports it.
+     */
+    extraReturningColumns: ColumnMetadata[] = [];
 
     /**
      * Optional on conflict statement used in insertion query in postgres.
      */
     onConflict: string = "";
+
+    /**
+     * Optional on ignore statement used in insertion query in databases.
+     */
+    onIgnore: string | boolean = false;
+
+    /**
+     * Optional on update statement used in insertion query in databases.
+     */
+    onUpdate: { columns?: string, conflict?: string, overwrite?: string };
 
     /**
      * JOIN queries.
@@ -144,11 +160,6 @@ export class QueryExpressionMap {
     disableEscaping: boolean = true;
 
     /**
-     * todo: needs more information.
-     */
-    ignoreParentTablesJoins: boolean = false;
-
-    /**
      * Indicates if virtual columns should be included in entity result.
      *
      * todo: what to do with it? is it properly used? what about persistence?
@@ -196,6 +207,11 @@ export class QueryExpressionMap {
     cacheId: string;
 
     /**
+     * Options that define QueryBuilder behaviour.
+     */
+    options: SelectQueryBuilderOption[] = [];
+
+    /**
      * Property path of relation to work with.
      * Used in relational query builder.
      */
@@ -211,6 +227,33 @@ export class QueryExpressionMap {
      * Used in INSERT query.
      */
     insertColumns: string[] = [];
+
+    /**
+     * Used if user wants to update or delete a specific entities.
+     */
+    whereEntities: ObjectLiteral[] = [];
+
+    /**
+     * Indicates if entity must be updated after insertion / updation.
+     * This may produce extra query or use RETURNING / OUTPUT statement (depend on database).
+     */
+    updateEntity: boolean = true;
+
+    /**
+     * Indicates if listeners and subscribers must be called before and after query execution.
+     */
+    callListeners: boolean = true;
+
+    /**
+     * Indicates if query must be wrapped into transaction.
+     */
+    useTransaction: boolean = false;
+
+    /**
+     * Extra parameters.
+     * Used in InsertQueryBuilder to avoid default parameters mechanizm and execute high performance insertions.
+     */
+    nativeParameters: ObjectLiteral = {};
 
     // -------------------------------------------------------------------------
     // Constructor
@@ -228,7 +271,7 @@ export class QueryExpressionMap {
      * otherwise it uses default entity order by if it was set.
      */
     get allOrderBys() {
-        if (!Object.keys(this.orderBys).length && this.mainAlias!.hasMetadata) {
+        if (!Object.keys(this.orderBys).length && this.mainAlias!.hasMetadata && this.options.indexOf("disable-global-order") === -1) {
             const entityOrderBy = this.mainAlias!.metadata.orderBy || {};
             return Object.keys(entityOrderBy).reduce((orderBy, key) => {
                 orderBy[this.mainAlias!.name + "." + key] = entityOrderBy[key];
@@ -249,8 +292,8 @@ export class QueryExpressionMap {
     setMainAlias(alias: Alias): Alias {
 
         // if main alias is already set then remove it from the array
-        if (this.mainAlias)
-            this.aliases.splice(this.aliases.indexOf(this.mainAlias));
+        // if (this.mainAlias)
+        //     this.aliases.splice(this.aliases.indexOf(this.mainAlias));
 
         // set new main alias
         this.mainAlias = alias;
@@ -335,6 +378,8 @@ export class QueryExpressionMap {
         map.valuesSet = this.valuesSet;
         map.returning = this.returning;
         map.onConflict = this.onConflict;
+        map.onIgnore = this.onIgnore;
+        map.onUpdate = this.onUpdate;
         map.joinAttributes = this.joinAttributes.map(join => new JoinAttribute(this.connection, this, join));
         map.relationIdAttributes = this.relationIdAttributes.map(relationId => new RelationIdAttribute(this, relationId));
         map.relationCountAttributes = this.relationCountAttributes.map(relationCount => new RelationCountAttribute(this, relationCount));
@@ -350,7 +395,6 @@ export class QueryExpressionMap {
         map.lockVersion = this.lockVersion;
         map.parameters = Object.assign({}, this.parameters);
         map.disableEscaping = this.disableEscaping;
-        map.ignoreParentTablesJoins = this.ignoreParentTablesJoins;
         map.enableRelationIdValues = this.enableRelationIdValues;
         map.extraAppendedAndWhereCondition = this.extraAppendedAndWhereCondition;
         map.subQuery = this.subQuery;
@@ -360,6 +404,12 @@ export class QueryExpressionMap {
         map.cacheDuration = this.cacheDuration;
         map.relationPropertyPath = this.relationPropertyPath;
         map.of = this.of;
+        map.insertColumns = this.insertColumns;
+        map.whereEntities = this.whereEntities;
+        map.updateEntity = this.updateEntity;
+        map.callListeners = this.callListeners;
+        map.useTransaction = this.useTransaction;
+        map.nativeParameters = this.nativeParameters;
         return map;
     }
 

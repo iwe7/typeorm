@@ -4,11 +4,11 @@ import {Connection} from "../../../../src/connection/Connection";
 import {Post} from "./entity/Post";
 
 describe("query builder > insertion > on conflict", () => {
-    
+
     let connections: Connection[];
     before(async () => connections = await createTestingConnections({
         entities: [__dirname + "/entity/*{.js,.ts}"],
-        enabledDrivers: ["postgres"] // since on conflict statement is only supported in postgres
+        enabledDrivers: ["postgres", "sqlite"] // since on conflict statement is only supported in postgres and sqlite >= 3.24.0
     }));
     beforeEach(() => reloadTestingDatabases(connections));
     after(() => closeTestingConnections(connections));
@@ -36,7 +36,7 @@ describe("query builder > insertion > on conflict", () => {
             .onConflict(`("id") DO NOTHING`)
             .execute();
 
-        await connection.manager.findOneById(Post, "post#1").should.eventually.be.eql({
+        await connection.manager.findOne(Post, "post#1").should.eventually.be.eql({
             id: "post#1",
             title: "About post"
         });
@@ -49,7 +49,7 @@ describe("query builder > insertion > on conflict", () => {
             .setParameter("title", post2.title)
             .execute();
 
-        await connection.manager.findOneById(Post, "post#1").should.eventually.be.eql({
+        await connection.manager.findOne(Post, "post#1").should.eventually.be.eql({
             id: "post#1",
             title: "Again post"
         });

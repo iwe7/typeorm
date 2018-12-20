@@ -85,6 +85,9 @@ export class Post {
     @Column("image")
     image: Buffer;
 
+    @Column("rowversion")
+    rowversion: Buffer;
+
     // -------------------------------------------------------------------------
     // Date Types
     // -------------------------------------------------------------------------
@@ -112,6 +115,19 @@ export class Post {
 
     @Column("datetimeoffset")
     datetimeoffset: Date;
+
+    // -------------------------------------------------------------------------
+    // Spatial Types
+    // -------------------------------------------------------------------------
+
+    @Column("geometry")
+    geometry1: string;
+
+    @Column("geometry")
+    geometry2: string;
+
+    @Column("geometry")
+    geometry3: string;
 
     // -------------------------------------------------------------------------
     // TypeOrm Specific Types

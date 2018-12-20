@@ -16,23 +16,22 @@ export class DriverUtils {
             const parsedUrl = this.parseConnectionUrl(options.url);
             if (buildOptions && buildOptions.useSid) {
                 const urlDriverOptions: any = {
-                    type: options.type,
-                    host: parsedUrl.host,
-                    username: parsedUrl.username,
-                    password: parsedUrl.password,
-                    port: parsedUrl.port,
-                    sid: parsedUrl.database
+                    type: options.type || parsedUrl.type,
+                    host: options.host || parsedUrl.host,
+                    username: options.username || parsedUrl.username,
+                    password: options.password || parsedUrl.password,
+                    port: options.port || parsedUrl.port,
+                    sid: options.sid || options.database || parsedUrl.database
                 };
                 return Object.assign(urlDriverOptions, options);
-
             } else {
                 const urlDriverOptions: any = {
-                    type: options.type,
-                    host: parsedUrl.host,
-                    username: parsedUrl.username,
-                    password: parsedUrl.password,
-                    port: parsedUrl.port,
-                    database: parsedUrl.database
+                    type: options.type || parsedUrl.type,
+                    host: options.host || parsedUrl.host,
+                    username: options.username || parsedUrl.username,
+                    password: options.password || parsedUrl.password,
+                    port: options.port || parsedUrl.port,
+                    database: options.database || parsedUrl.database
                 };
                 return Object.assign(urlDriverOptions, options);
             }
@@ -48,6 +47,7 @@ export class DriverUtils {
      * Extracts connection data from the connection url.
      */
     private static parseConnectionUrl(url: string) {
+        const type = url.split(":")[0];
         const firstSlashes = url.indexOf("//");
         const preBase = url.substr(firstSlashes + 2);
         const secondSlash = preBase.indexOf("/");
@@ -58,12 +58,17 @@ export class DriverUtils {
         const usernameAndPassword = base.substr(0, lastAtSign);
         const hostAndPort = base.substr(lastAtSign + 1);
 
+        let username = usernameAndPassword;
+        let password = "";
         const firstColon = usernameAndPassword.indexOf(":");
-        const username = usernameAndPassword.substr(0, firstColon);
-        const password = usernameAndPassword.substr(firstColon + 1);
+        if (firstColon !== -1) {
+            username = usernameAndPassword.substr(0, firstColon);
+            password = usernameAndPassword.substr(firstColon + 1);
+        }
         const [host, port] = hostAndPort.split(":");
 
         return {
+            type: type,
             host: host,
             username: username,
             password: password,

@@ -24,7 +24,7 @@ import {
     InsertWriteOpResult,
     MapReduceOptions,
     MongoCountPreferences,
-    MongodbIndexOptions,
+    MongodbIndexOptions, ObjectID,
     OrderedBulkOperation,
     ParallelCollectionScanOptions,
     ReadPreference,
@@ -97,22 +97,14 @@ export class MongoRepository<Entity extends ObjectLiteral> extends Repository<En
     /**
      * Finds first entity that matches given conditions and/or find options.
      */
-    findOne(optionsOrConditions?: FindOneOptions<Entity>|Partial<Entity>): Promise<Entity|undefined> {
-        return this.manager.findOne(this.metadata.target, optionsOrConditions);
-    }
-
-    /**
-     * Finds entity by given id.
-     * Optionally find options or conditions can be applied.
-     */
-    findOneById(id: any, optionsOrConditions?: FindOneOptions<Entity>|Partial<Entity>): Promise<Entity|undefined> {
-        return this.manager.findOneById(this.metadata.target, id, optionsOrConditions);
+    findOne(optionsOrConditions?: string|number|Date|ObjectID|FindOneOptions<Entity>|Partial<Entity>, maybeOptions?: FindOneOptions<Entity>): Promise<Entity|undefined> {
+        return this.manager.findOne(this.metadata.target, optionsOrConditions as any, maybeOptions as any);
     }
 
     /**
      * Creates a cursor for a query that can be used to iterate over results from MongoDB.
      */
-    createCursor(query?: ObjectLiteral): Cursor<Entity> {
+    createCursor<T = any>(query?: ObjectLiteral): Cursor<T> {
         return this.manager.createCursor(this.metadata.target, query);
     }
 
@@ -127,10 +119,17 @@ export class MongoRepository<Entity extends ObjectLiteral> extends Repository<En
     /**
      * Execute an aggregation framework pipeline against the collection.
      */
-    aggregate(pipeline: ObjectLiteral[], options?: CollectionAggregationOptions): AggregationCursor<Entity> {
-        return this.manager.aggregate(this.metadata.target, pipeline, options);
+    aggregate<R = any>(pipeline: ObjectLiteral[], options?: CollectionAggregationOptions): AggregationCursor<R> {
+        return this.manager.aggregate<R>(this.metadata.target, pipeline, options);
     }
 
+    /**
+     * Execute an aggregation framework pipeline against the collection.
+     * This returns modified version of cursor that transforms each result into Entity model.
+     */
+    aggregateEntity(pipeline: ObjectLiteral[], options?: CollectionAggregationOptions): AggregationCursor<Entity> {
+        return this.manager.aggregateEntity(this.metadata.target, pipeline, options);
+    }
     /**
      * Perform a bulkWrite operation without a fluent API.
      */
@@ -141,7 +140,7 @@ export class MongoRepository<Entity extends ObjectLiteral> extends Repository<En
     /**
      * Count number of matching documents in the db to a query.
      */
-    count(query?: ObjectLiteral, options?: MongoCountPreferences): Promise<any> {
+    count(query?: ObjectLiteral, options?: MongoCountPreferences): Promise<number> {
         return this.manager.count(this.metadata.target, query || {}, options);
     }
 
